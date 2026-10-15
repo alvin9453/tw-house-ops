@@ -15,15 +15,16 @@ Full evaluation of a rental listing. Two phases:
 ## Section 1: Input Handling
 
 ### URL input (most common)
-1. `browser_navigate` to the URL
-2. `browser_snapshot` to read the page
+1. Follow `docs/browser.md` to navigate to the URL with an available interactive browser or `agent-browser`.
+2. Read the rendered listing content, using a full snapshot if using the CLI.
 3. **Verify listing is active:**
    - Active: listing title + description + price + contact/apply section all present
-   - Inactive: only nav and footer visible, no listing content → output "此物件已下架或不再提供。" and stop
-4. **NEVER** use WebSearch or WebFetch alone to verify listing status. Always use Playwright.
+   - Inactive: explicit removal notice → output "此物件已下架或不再提供。" and stop
+   - Unconfirmed: blocked, login required, incomplete loading, or only nav/footer → explain the limitation and stop URL evaluation; offer evaluation of user-provided text
+4. **NEVER** use web search snippets or static HTTP responses alone to verify listing status.
 
 ### Pasted text input
-Proceed directly to Phase 1 using the provided content.
+Proceed directly to Phase 1 using the provided content. Record `unconfirmed (user-provided text)` for verification; do not claim live access.
 
 ---
 
@@ -74,7 +75,7 @@ Extract from the listing page:
 ## Section 4: Price Analysis
 
 1. **Rent per 坪:** `月租 ÷ 坪數`
-2. **市場行情:** Use WebSearch or 實價登錄 to find rental median for the same district. Target: comparable size and type, last 3 months.
+2. **市場行情:** Use available web search or 實價登錄 to find rental median for the same district. Target: comparable size and type, last 3 months. Cite sources and dates; if unavailable, state the gap rather than inventing comparables.
 3. **Premium/discount:** `(listing rent/坪 − median rent/坪) ÷ median rent/坪 × 100%`
 4. **Total monthly cost:** `月租 + 管理費`
 5. **押金換算:** `押金 ÷ 月租` = number of months
@@ -162,7 +163,7 @@ Read filenames in `reports/`. Find the highest `{###}` prefix. New report number
 **Score:** {score}/5
 **Type:** rent
 **Status:** Evaluated
-**Verification:** confirmed
+**Verification:** {confirmed | unconfirmed (reason)}
 
 ## 價格分析
 

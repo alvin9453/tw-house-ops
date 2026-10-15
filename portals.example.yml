@@ -1,6 +1,6 @@
 # tw-house-ops Portal Configuration
 # Copy this file to portals.yml. It will be auto-copied during onboarding.
-# portals.yml is in the SYSTEM LAYER — it may be updated by system updates.
+# portals.yml is in the USER LAYER — preserve user-selected portals and filters.
 # Add custom companies to tracked_portals and adjust title_filter for your needs.
 
 title_filter:
@@ -24,7 +24,7 @@ tracked_portals:
     enabled: true
     url_template: "https://sale.591.com.tw/?region={region_code}&price=0,{buy_max}&area={size_min},"
 
-  # Static portals use base_url — Playwright navigates directly, then applies filters via UI
+  # Portals with base_url — the interactive browser navigates, then applies filters via UI
   - name: "樂屋網 買屋"
     type: buy
     enabled: true
@@ -55,7 +55,7 @@ market_reference:
     enabled: true
     use_for: price_comparison   # Never populates pipeline — only injected into evaluation reports
 
-search_queries:                 # Level 3: WebSearch broad discovery
+search_queries:                 # Level 3: available web search for broad discovery
   - name: "591 rent discovery"
     query: "site:rent.591.com.tw {districts} {rent_max}以下"
     enabled: true

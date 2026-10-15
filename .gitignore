@@ -4,6 +4,8 @@ batch/tracker-additions/processed/*
 !batch/tracker-additions/processed/.gitkeep
 node_modules/
 .DS_Store
-.claude/
+config/profile.yml
+portals.yml
+modes/_profile.md
 data/scan-history.tsv
 batch/tracker-additions/*.tsv

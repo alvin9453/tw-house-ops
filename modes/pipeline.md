@@ -2,7 +2,7 @@
 
 <!-- Read modes/_shared.md first. -->
 
-**Execution recommendation:** Run this mode as a background subagent (`Agent` tool with `run_in_background: true`) to protect the main conversation context. Processing multiple listings generates substantial output.
+**Execution:** Run sequentially in the current agent session. Save progress after each listing and give brief updates during long batches. Follow `AGENTS.md`; no background-agent feature is required.
 
 ---
 
@@ -51,15 +51,15 @@ Check against `config/profile.yml`. For rent listings check `budget.rent_max`, f
 Check `modes/_profile.md` deal_breakers against the title/address fields.
 
 **If any check fails:**
-- Mark entry in pipeline.md: `- [x] SKIP: {reason} — {url}`
 - Write a minimal TSV to `batch/tracker-additions/{num}-{slug}.tsv` with status `Skip`
+- Run `node merge-tracker.mjs`; after successful merge, mark the entry `- [x] SKIP: {reason} — {url}`
 - Continue to next entry
 
 ### 2c: Full Evaluation (if qualified)
 
-**Note:** Full evaluation generates significant output. Consider whether to:
-- Evaluate all entries in sequence (simpler but can be very long)
-- Or ask the user how many to evaluate in one run if there are >5 entries
+Process all pending entries unless the user supplied a limit. Keep full reports in `reports/` and checkpoint after each listing.
+
+Before Phase 2, follow `docs/browser.md` to open the actual listing and verify its content. Reapply the quick filter with current page data, including floor and age. For an explicit removal notice, mark `- [x] EXPIRED: {url}` and continue. If access is unconfirmed, keep the entry unchecked, note the reason in the summary, and continue to the next entry. If no browser is available at all, report the blocker and stop live evaluations.
 
 **For rent listings:**
 - Follow all steps in `modes/rent.md` Phase 2 (Sections 3–9)
@@ -71,12 +71,11 @@ Check `modes/_profile.md` deal_breakers against the title/address fields.
 - Write the full report to `reports/`
 - Write TSV to `batch/tracker-additions/`
 
-**Note on verification:** In batch mode, set `**Verification:** unconfirmed (batch mode)` in the report header because Playwright liveness checks are not always reliable for queued entries that may have aged.
+**Verification:** Use `confirmed` only after reading the actual listing during this run. If the user provides listing text for an inaccessible page, evaluation may proceed with `unconfirmed (user-provided text)`. Never treat old pipeline metadata as fetched page content.
 
 ### 2d: Mark entry as done
 
-After evaluation (qualified or skip):
-- Replace `- [ ]` with `- [x]` for that line in `data/pipeline.md`
+After writing the report and TSV, run `node merge-tracker.mjs`. Only after a successful merge, replace `- [ ]` with `- [x]` for that line in `data/pipeline.md`. If merge fails, keep the entry unchecked, stop processing, and report the pending files. On resume, check for an existing report/TSV/tracker entry for the URL and recover that work before creating another evaluation.
 
 ---
 
@@ -90,7 +89,9 @@ After all entries are processed:
    ```
    This merges all newly written TSV files into `data/tracker.md`.
 
-2. **Output summary table:**
+2. Run `node verify-pipeline.mjs`. Report any issues and remaining unchecked entries; do not claim the batch is complete if work is blocked or integrity validation fails.
+
+3. **Output summary table:**
 
 ```
 Pipeline 處理完成 — YYYY-MM-DD
@@ -152,4 +153,4 @@ Priority rules:
 - **Order matters:** Process entries in the order they appear in pipeline.md (top to bottom).
 - **Report numbering:** Each evaluation must check `reports/` for the current highest ### before writing, since earlier entries in the same batch will have incremented the counter.
 - **Partial runs:** If the user interrupts mid-batch, already-checked entries (`- [x]`) will not be re-processed on the next run.
-- **Error handling:** If a listing URL is unreachable or returns an error, mark it `- [x] ERROR: {reason}` and continue.
+- **Error handling:** If a listing URL is unreachable or returns an error, leave it unchecked for retry, record the reason in the summary, and continue. Only explicit removal notices count as expiry.

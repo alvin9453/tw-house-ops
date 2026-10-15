@@ -1,6 +1,6 @@
 # tw-house-ops
 
-台灣看房 AI 管線，建構於 Claude Code 之上。自動化物件發掘、評估與追蹤，涵蓋租屋與購屋市場的完整搜尋流程。
+台灣看房 AI 管線，透過 `AGENTS.md` 提供跨工具的 AI Agent 工作流程。自動化物件發掘、評估與追蹤，涵蓋租屋與購屋市場的完整搜尋流程。
 
 支援三種使用者類型：**租屋族**、**首購族**、**換屋族**。
 
@@ -22,10 +22,13 @@
 
 ## 事前準備
 
-掃描（`scan`）與物件上架驗證依賴 `agent-browser`，**使用前必須安裝**：
+使用支援 `AGENTS.md` 的 AI Agent 開啟此專案，並安裝 **Node.js 22+**（附 npm）。維護腳本只使用 Node.js 內建模組，不需執行 `npm install` 安裝專案依賴。
+
+掃描（`scan`）與物件上架驗證需要互動式瀏覽器：可使用 AI Agent 工作階段已連接的瀏覽器工具，或安裝 `agent-browser` CLI：
 
 ```bash
 npm install -g agent-browser
+agent-browser install
 ```
 
 確認安裝成功：
@@ -34,16 +37,18 @@ npm install -g agent-browser
 agent-browser --version
 ```
 
-> 未安裝的情況下執行 `scan` 或貼上 URL，Claude 將無法爬取真實頁面內容，後續評估結果不可信。Claude Code 每次啟動時會自動偵測並提示。
+工具選擇、安裝與上架驗證規則見 [瀏覽器設定](docs/browser.md)。沒有互動式瀏覽器時，AI Agent 會說明無法執行即時掃描或 URL 驗證；仍可比較既有報告、查閱追蹤表，或評估你貼上的物件文字。
 
 ---
 
 ## 快速開始
 
-1. 安裝 `agent-browser`（見上方）
-2. Clone 此 repo 並在 Claude Code 中開啟
-3. Claude 會自動偵測缺少的設定檔，啟動初始設定流程（7 個步驟，約 5 分鐘）
-4. 設定完成後，貼上任何物件 URL 即可評估——或輸入 `scan` 搜尋目標區域
+1. Clone 此 repo，使用支援 `AGENTS.md` 的 AI Agent 開啟專案資料夾。
+2. AI Agent 透過根目錄的 [`AGENTS.md`](AGENTS.md) 讀取專案規則與模式路由；若工具未自動載入，請先要求它讀取該檔案。
+3. 輸入「幫我設定找房條件」。AI Agent 會讀取找房流程，詢問尚未提供的條件，建立缺少的個人設定檔（約 5 分鐘）；既有設定與紀錄會保留。
+4. 確認互動式瀏覽器可用後，貼上物件 URL 即可評估，或輸入 `scan` 搜尋目標區域。
+
+`scan`、`pipeline` 等文字是在 AI Agent 對話中輸入的需求，不是終端機指令或需要安裝的 slash command。直接要求修改程式、測試或文件時，AI Agent 會處理開發工作，不會要求先填找房資料。
 
 ---
 
@@ -86,7 +91,11 @@ agent-browser --version
 
 ```
 tw-house-ops/
-├── CLAUDE.md                    # 入口：模式路由、初始設定、資料合約
+├── AGENTS.md                    # AI Agent 入口：任務路由、工具與資料規則
+├── docs/
+│   ├── house-hunting.md         # 初始設定、評估流程、資料合約
+│   ├── browser.md               # 瀏覽器設定與上架驗證
+│   └── superpowers/             # 歷史設計與實作計畫（已封存）
 ├── config/
 │   ├── profile.yml              # 個人設定（永遠不會被系統更新覆寫）
 │   └── profile.example.yml      # 設定範本
@@ -143,9 +152,9 @@ tw-house-ops/
 
 ## 資料合約
 
-**使用者層**（永遠不會被自動覆寫）：`config/profile.yml`、`modes/_profile.md`、`data/*`、`reports/*`
+**使用者層**（永遠不會被自動覆寫）：`config/profile.yml`、`portals.yml`、`modes/_profile.md`、`data/*`、`reports/*`、`output/*`。個人設定檔已加入 `.gitignore`；追蹤表與報告仍由使用者決定是否提交至 Git。
 
-**系統層**（可能隨系統更新）：所有 mode 檔案、`CLAUDE.md`、`*.mjs` 腳本、`templates/*`
+**系統層**（可能隨系統更新）：`AGENTS.md`、工作流程文件、除 `modes/_profile.md` 外的 mode 檔案、`*.mjs` 腳本、`templates/*`。
 
 ---
 
@@ -162,7 +171,7 @@ node --test tests/**/*.test.mjs  # 執行所有測試
 
 ## 使用原則
 
-本系統以精準找房為目標，非大量瀏覽。Claude 不會代替你送出 offer、簽約或送出任何申請。評分低於 3.5/5 的物件將被明確建議不值得追蹤。
+本系統以精準找房為目標，非大量瀏覽。AI Agent 可以準備 offer、合約與申請草稿；送出或簽署前，必須經過你審閱並明確核准。評分低於 3.5/5 的物件將被明確建議不值得追蹤。
 
 ---
 

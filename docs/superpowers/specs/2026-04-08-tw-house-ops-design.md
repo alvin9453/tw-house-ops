@@ -1,6 +1,8 @@
 # tw-house-ops — Design Spec
 **Date:** 2026-04-08
-**Status:** Approved
+**Status:** Archived — superseded by the AGENTS.md workflow
+
+> Historical design reference for the original Claude Code implementation. File paths and tools below may be outdated. Current instructions are in the root `AGENTS.md`, `docs/house-hunting.md`, and `docs/browser.md`; no Superpowers plugin is required.
 
 ---
 

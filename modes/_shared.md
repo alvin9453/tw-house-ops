@@ -78,7 +78,7 @@ Final score = weighted average of 5 dimension scores × 5.
 **Score:** {X.X}/5
 **Type:** rent | buy
 **Status:** {canonical status}
-**Verification:** confirmed | unconfirmed (batch mode)
+**Verification:** confirmed | unconfirmed (reason)
 ```
 
 **Report filename convention:** `{###}-{district}-{road-slug}-{YYYY-MM-DD}.md`
@@ -87,11 +87,11 @@ Final score = weighted average of 5 dimension scores × 5.
 - `{road-slug}`: pinyin approximation, hyphenated; if ambiguous → `road-{4-char-hex}`
 - `{YYYY-MM-DD}`: evaluation date
 
-**Listing liveness verification:** ALWAYS use Playwright (`browser_navigate` + `browser_snapshot`). NEVER use WebSearch or WebFetch alone to determine if a listing is active. Expired signals: `error=true` URL param, "物件已下架"/"no longer available" in content, content < 300 chars with only nav/footer.
+**Listing liveness verification:** Follow `docs/browser.md`, using an available interactive browser tool or `agent-browser` through the shell. Never use web search snippets or static HTTP responses alone to determine if a listing is active. An explicit removal notice confirms expiry; errors, incomplete loading, login prompts, or only nav/footer mean unconfirmed access. Use `confirmed` only after reading the actual listing; for user-provided text, use `unconfirmed (user-provided text)`.
 
 **Platform access methods:**
-- 591, 樂屋網: SPA → Playwright required
-- 信義, 永慶, 東森, 住商: SPA → Playwright required
+- 591, 樂屋網: SPA → interactive browser required
+- 信義, 永慶, 東森, 住商: SPA → interactive browser required
 - 實價登錄 (lvr.land.moi.gov.tw): Government REST API → reference data only, never populates pipeline
 
 ---

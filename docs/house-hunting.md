@@ -1,38 +1,35 @@
-# tw-house-ops — AI House Hunting Pipeline for Taiwan
+# tw-house-ops — House Hunting Workflow
 
 ## What is tw-house-ops
 
-tw-house-ops is an AI-powered real estate search pipeline built on Claude Code, designed for house hunters in Taiwan. It automates listing discovery, evaluation, and tracking across the full search lifecycle — from scanning portals like 591, 樂屋網, and 信義房屋, through structured evaluation against your budget and lifestyle criteria, to managing a tracker of every property you've considered. It supports three buyer personas (renter, first-time buyer, upgrader), handles both rental and purchase markets, and produces structured reports so you can make informed decisions without drowning in listings.
+tw-house-ops is an AI-powered real estate search pipeline for Taiwan. It supports renters, first-time buyers, and upgraders, from portal discovery through evaluation and tracking.
+
+Read this workflow when handling a house-hunting request, then load the relevant mode from `AGENTS.md`. Repository development and documentation tasks do not require onboarding or personal configuration.
 
 ---
 
 ## First-Session Checks
 
-On every session start, run these checks **silently** (no output to the user unless action is needed):
+Before the first house-hunting operation in a session, check only the files needed for that operation **silently** (no output to the user unless action is needed). Tracker summaries and comparisons of existing reports do not require creating a new profile or scanner configuration.
 
 1. Does `config/profile.yml` exist?
 2. Does `portals.yml` exist?
 3. Does `data/tracker.md` exist?
 4. Does `data/pipeline.md` exist?
 5. Does `modes/_profile.md` exist?
-6. Is `agent-browser` installed? Run `which agent-browser` silently.
+6. If the request needs live pages, is an interactive browser tool available? Otherwise run `command -v agent-browser` silently. See `docs/browser.md`.
 
-**If `modes/_profile.md` is missing** → silently copy from `modes/_profile.template.md`. This is the user's customization file and will never be overwritten by system updates.
+**If personal criteria are needed and `modes/_profile.md` is missing** → silently copy from `modes/_profile.template.md`. This is the user's customization file and will never be overwritten by system updates. Unfilled placeholders are not user preferences; use confirmed profile values and user answers.
 
-**If any of the five main files are missing** → enter Onboarding mode (see next section). Do NOT run evaluations, scans, or any other mode until the basics are in place.
+**If required files are missing** → create only missing files. Ask the onboarding questions only for preferences not already supplied in existing config or the conversation. Never replace an existing profile, tracker, pipeline, scan history, or portals config with a template. If `data/scan-history.tsv` is missing, create the header from Step 5. Do not infer personal preferences from example values.
 
-**If `agent-browser` is not found** → warn the user immediately (this is NOT silent):
-> ⚠️ `agent-browser` 未安裝。掃描（scan）與物件上架驗證功能需要它才能運作。請先執行：
-> ```bash
-> npm install -g agent-browser
-> ```
-> 安裝完成後重新開啟 Claude Code 即可正常使用。未安裝的情況下執行 scan 或貼上 URL，爬取結果將不可靠，後續評估可能基於過期或錯誤資料。
+**If neither browser option is available** → explain that live scanning and URL verification are unavailable, and point to `docs/browser.md` for setup. Existing-report comparisons, tracker summaries, and evaluation of user-provided listing text can still proceed. Do not claim to have opened or verified a page.
 
 ---
 
 ## Onboarding Flow
 
-Guide the user through these 7 steps in order. Do not skip ahead.
+For a new profile, guide the user through these 7 steps in order, reusing answers already supplied. For an existing profile, ask only for missing information required by the requested operation.
 
 ### Step 1: Search Mode
 
@@ -40,10 +37,12 @@ Ask:
 > "Are you looking to **rent**, **buy**, or **both**?"
 
 - Set `search.mode` to `rent`, `buy`, or `both`
-- Set `buyer_type`:
-  - Renting → `renter`
+- Set `search.buyer_type`:
+  - Renting only → `renter`
   - Buying, no existing property → `first_time`
   - Buying, already own a home → `upgrader`
+
+For `both`, ask whether the user already owns a home to select `first_time` or `upgrader` for purchase evaluations.
 
 ### Step 2: Region + Budget
 
@@ -54,7 +53,7 @@ Ask:
 
 Fill in:
 - `regions[].city` and `regions[].districts`
-- `budget.rent_max` (if renting) or `budget.buy_max` + `budget.monthly_payment_max` (if buying)
+- `budget.rent_max` (if renting), `budget.buy_max` + `budget.monthly_payment_max` (if buying), or all three for `both`
 
 ### Step 3: Commute Origin
 
@@ -74,12 +73,12 @@ Ask:
 > - Year you purchased it
 > - Strategy: sell first, buy first, or simultaneous?"
 
-Fill in `current_property` block:
+Fill in `current_property` block for upgraders:
 - `estimated_value`, `loan_remaining`, `purchase_year`, `selling_strategy`
 
 ### Step 5: Create Config Files
 
-Using the answers from Steps 1–4, auto-create the following:
+Using the answers from Steps 1–4, create the following only if missing (preserve existing contents):
 
 - **`config/profile.yml`** — copy from `config/profile.example.yml`, fill in user's answers
 - **`data/tracker.md`** — create with header:
@@ -97,14 +96,16 @@ Using the answers from Steps 1–4, auto-create the following:
   ```markdown
   # Pipeline Inbox
 
-  Paste listing URLs here, one per line. Claude will process them in order.
+  Add listing URLs as unchecked items. The AI agent will process them in order.
 
   ## Pending
+
+  <!-- - [ ] https://... | Platform | District | Type | Price | Size | Layout -->
   ```
 
 ### Step 6: Copy Portals Config
 
-Auto-copy `portals.example.yml` → `portals.yml`. Tell the user:
+If `portals.yml` is missing, copy `portals.example.yml` → `portals.yml`. Tell the user when a copy was made:
 > "I've copied the default portals configuration. You can customize which sites and search parameters to use by editing `portals.yml`, or just ask me."
 
 ### Step 7: Ready
@@ -124,7 +125,9 @@ Confirm setup is complete and offer an immediate scan:
 
 | File | Purpose |
 |------|---------|
-| `CLAUDE.md` | Entry point — routing brain Claude reads every session |
+| `AGENTS.md` | Agent entry point — task routing and repository rules |
+| `docs/house-hunting.md` | Onboarding, evaluation flow, and data contract |
+| `docs/browser.md` | Interactive browser setup and verification rules |
 | `config/profile.yml` | User preferences: budget, regions, commute, property criteria |
 | `portals.yml` | Portal URLs, search queries, and scraping config |
 | `data/pipeline.md` | Inbox of pending listing URLs to process |
@@ -135,20 +138,9 @@ Confirm setup is complete and offer an immediate scan:
 
 ---
 
-## Mode Routing
+## Listing Type Routing
 
-| If the user... | Mode |
-|----------------|------|
-| Pastes a URL | Auto-pipeline: detect rent vs buy → Phase 1 quick filter → Phase 2 full eval |
-| Asks to evaluate a rental | `modes/rent.md` |
-| Asks to evaluate a purchase | `modes/buy.md` |
-| Wants an affordability calculation | `modes/afford.md` |
-| Is planning an upgrade (sell + buy) | `modes/switch.md` |
-| Wants to compare two or more listings | `modes/compare.md` |
-| Is preparing for a property viewing | `modes/visit.md` |
-| Wants to scan portals for new listings | `modes/scan.md` |
-| Asks about tracker / search status | Show `data/tracker.md` summary |
-| Wants to process pending pipeline URLs | `modes/pipeline.md` |
+Use the mode routing table in `AGENTS.md`.
 
 **When `search.mode: both`:** Detect listing type from page content:
 - Contains 月租 or 押金 (without total price) → treat as **rent** → use `modes/rent.md`
@@ -163,17 +155,14 @@ When the user pastes a URL, execute this sequence:
 
 ### 1. Verify Listing is Active
 
-Use `agent-browser` (via Bash tool):
-```bash
-agent-browser open {url}
-agent-browser snapshot -i
-```
+Follow `docs/browser.md`: use an available interactive browser tool, or `agent-browser` through the shell. Navigate to the URL and read the rendered listing content.
 
 Interpretation:
-- Only footer/navbar present, no listing content → listing **closed** → report "Listing no longer available" and stop
+- Explicit removal notice → listing **closed** → report "Listing no longer available" and stop
+- Only footer/navbar, blocked access, login, CAPTCHA, or incomplete loading → status **unconfirmed** → explain the limitation and stop URL evaluation; offer evaluation of user-provided text
 - Title + description + price + contact/apply section present → listing **active** → continue
 
-**NEVER** rely on WebSearch or WebFetch alone to verify if a listing is active. Always use `agent-browser`. If `agent-browser` is not installed, stop and remind the user to install it before proceeding.
+**NEVER** rely on web search snippets or static HTTP fetches alone to verify if a listing is active. If no interactive browser is available, stop URL verification and ask for listing text or browser setup.
 
 ### 2. Detect Rent vs Buy
 
@@ -239,7 +228,7 @@ Every report must include these fields at the top:
 **Score:** {X.X}/5
 **Type:** rent | buy
 **Status:** {canonical status}
-**Verification:** confirmed | unconfirmed (batch mode)
+**Verification:** confirmed | unconfirmed (reason)
 ```
 
 ### Location
@@ -312,6 +301,7 @@ Rules:
 These files contain your personal data. System updates will never touch them:
 
 - `config/profile.yml`
+- `portals.yml`
 - `modes/_profile.md`
 - `data/*` (tracker, pipeline, scan history)
 - `reports/*`
@@ -322,7 +312,7 @@ These files contain your personal data. System updates will never touch them:
 These files are part of the system and may be updated:
 
 - `modes/_shared.md` and all mode files except `modes/_profile.md`
-- `CLAUDE.md`
+- `AGENTS.md` and workflow documentation in `docs/`
 - `*.mjs` scripts
 - `templates/*`
 

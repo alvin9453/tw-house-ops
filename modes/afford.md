@@ -74,7 +74,7 @@ Also show: User's stated `budget.buy_max` vs the calculated max — if budget > 
 ## Section 4: District Price Reality Check
 
 For each district in `profile.regions`:
-1. Fetch 實價登錄 median price/坪 for that district (last 6 months) using WebSearch
+1. Fetch 實價登錄 median price/坪 for that district (last 6 months) using available web search. Cite sources and dates; if search is unavailable, label the missing market data explicitly.
 2. Calculate: max affordable 坪數 = best affordable total price ÷ median price/坪
 3. Check vs `property.size_min`
 

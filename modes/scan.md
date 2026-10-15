@@ -2,16 +2,16 @@
 
 <!-- Read modes/_shared.md before executing this mode. -->
 
-**Execution recommendation:** Run this mode as a background subagent (`Agent` tool with `run_in_background: true`) to protect the main conversation context. Scanning multiple portals can take significant time.
+**Execution:** Run sequentially in the current agent session. Follow `AGENTS.md` for progress updates and persistence; no background-agent feature is required. Read `docs/browser.md` before browsing. CLI examples below can be mapped to an available interactive browser tool.
 
 ---
 
 ## Overview
 
 Three-level scanning strategy:
-- **Level 1 — agent-browser direct** (primary): Navigate each tracked portal's search results
+- **Level 1 — interactive browser** (primary): Navigate each tracked portal's search results
 - **Level 2 — 實價登錄 API** (reference only): Used during evaluation, NOT here — never populates pipeline.md
-- **Level 3 — WebSearch** (broad discovery): site: queries to find listings outside tracked portals
+- **Level 3 — web search** (broad discovery): site: queries to find listings outside tracked portals; skip with a stated limitation if no search tool is available
 
 ---
 
@@ -37,9 +37,9 @@ Three-level scanning strategy:
 
 ---
 
-## Step 2: Level 1 — agent-browser Direct Scan (Primary)
+## Step 2: Level 1 — Interactive Browser Scan (Primary)
 
-**Prerequisite:** `agent-browser` must be installed (`npm install -g agent-browser`). If not found, stop and remind the user before proceeding.
+**Prerequisite:** An interactive browser tool or the `agent-browser` CLI must be available. Follow `docs/browser.md` for tool selection and setup; if neither is available, stop live scanning and explain the limitation.
 
 For each enabled portal matching the search mode:
 
@@ -55,24 +55,24 @@ Substitute values from profile into the URL template:
 Then:
 ```bash
 agent-browser open {constructed_url}
-agent-browser snapshot -i
+agent-browser snapshot
 ```
 
 ### If portal has `base_url`:
 
 ```bash
 agent-browser open {base_url}
-agent-browser snapshot -i
+agent-browser snapshot
 ```
 
-Then interact with the site's search filters to apply district/price/size criteria:
+Use `agent-browser snapshot -i` to obtain current element references. Then interact with the site's search filters to apply district/price/size criteria:
 ```bash
 # Fill filter fields and submit search
 agent-browser fill @{district_input} "{district}"
 agent-browser fill @{price_input} "{price_max}"
 agent-browser click @{search_button}
 agent-browser wait --load networkidle
-agent-browser snapshot -i
+agent-browser snapshot
 ```
 
 ### Extraction (both methods):
@@ -92,7 +92,7 @@ If results show a "next page" / "下一頁" control:
 ```bash
 agent-browser find text "下一頁" click
 agent-browser wait --load networkidle
-agent-browser snapshot -i
+agent-browser snapshot
 ```
 
 Continue extracting until:
@@ -101,7 +101,7 @@ Continue extracting until:
 
 ---
 
-## Step 3: Level 3 — WebSearch Discovery (Secondary)
+## Step 3: Level 3 — Web Search Discovery (Secondary)
 
 For each `search_queries[]` entry in portals.yml (where `enabled: true`):
 
@@ -110,19 +110,14 @@ For each `search_queries[]` entry in portals.yml (where `enabled: true`):
    - `{rent_max}` → `budget.rent_max`
    - `{buy_max}` → `budget.buy_max`
 
-2. Run WebSearch with the substituted query
+2. Run available web search with the substituted query. If no search tool is available, skip Level 3 and note this in the summary.
 
-3. For each result URL: **verify liveness with `agent-browser`** before considering it:
+3. For each result URL: **verify liveness with the selected interactive browser** before considering it. CLI example:
    ```bash
    agent-browser open {url}
-   agent-browser snapshot -i
+   agent-browser snapshot
    ```
-   Check for expired signals:
-   - URL contains `error=true` parameter
-   - Page content contains "物件已下架" / "no longer available" / "此物件已結束"
-   - Content is < 300 characters (only nav/footer, no listing body)
-
-   Only proceed if listing appears active.
+   Follow `docs/browser.md`: an explicit "物件已下架" / "no longer available" / "此物件已結束" notice means expired. An error URL, blocked access, or only nav/footer is unconfirmed. Only proceed when actual listing content is loaded and appears active.
 
 ---
 
@@ -212,6 +207,6 @@ List each newly added listing with a `+` prefix. If nothing was added, say "→ 
 ## Notes
 
 - **Level 2 (實價登錄) is evaluation-only.** It provides price comparison data during rent.md / buy.md evaluation — it never populates pipeline.md.
-- **Do not verify liveness for Level 1 results** — freshly scraped search pages are assumed live. Liveness verification is only needed for Level 3 (WebSearch cached results).
+- **Level 1 results are discovery candidates** from a freshly loaded search page; individual listing verification happens before full evaluation. Level 3 cached results require verification before entering the pipeline.
 - **If a portal's page fails to load** (JS error, CAPTCHA, etc.): skip that portal, note it in the summary, continue with others.
-- **If `agent-browser` is not installed**: do not attempt any Level 1 or Level 3 liveness verification. Stop immediately and remind the user: `npm install -g agent-browser`.
+- **If no interactive browser is available**: stop live scanning and point to `docs/browser.md`. An installed CLI is optional when a connected browser tool is available.

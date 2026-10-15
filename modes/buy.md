@@ -17,13 +17,13 @@ Buy mode extends rent mode with loan calculations, 實價登錄 sale prices, and
 ## Section 1: Input Handling
 
 ### URL input
-1. `browser_navigate` to the URL
-2. `browser_snapshot`
-3. **Verify active:** listing title + price + contact section present. If only nav/footer → "此物件已下架或不再提供。" and stop.
-4. **NEVER** use WebSearch or WebFetch alone for liveness checks.
+1. Follow `docs/browser.md` to navigate to the URL with an available interactive browser or `agent-browser`.
+2. Read the rendered listing content, using a full snapshot if using the CLI.
+3. **Verify active:** listing title + description + price + contact section present. An explicit removal notice means expired; output "此物件已下架或不再提供。" and stop. Blocked access, incomplete loading, login prompts, or only nav/footer mean unconfirmed; explain the limitation and stop URL evaluation, offering evaluation of user-provided text.
+4. **NEVER** use web search snippets or static HTTP responses alone for liveness checks.
 
 ### Pasted text
-Proceed directly to Phase 1 using the provided content.
+Proceed directly to Phase 1 using the provided content. Record `unconfirmed (user-provided text)` for verification; do not claim live access.
 
 ---
 
@@ -70,7 +70,7 @@ If all pass → `Phase 1 通過 — 開始完整評估。`
 ## Section 4: Price Analysis
 
 1. **Price per 坪:** `總價 ÷ 坪數`
-2. **市場行情:** WebSearch or 實價登錄 for same district, comparable type, last 6 months. Get median price/坪.
+2. **市場行情:** Use available web search or 實價登錄 for same district, comparable type, last 6 months. Get median price/坪. Cite sources and dates; if unavailable, state the gap rather than inventing comparables.
 3. **Premium/discount:** `(listing/坪 − median/坪) ÷ median/坪 × 100%`
 4. **殺價空間:** If listing >5% above median → estimate negotiation room
 
@@ -192,7 +192,7 @@ Read `reports/` filenames. Find highest `{###}`. New = max + 1, zero-padded. Sta
 **Score:** {score}/5
 **Type:** buy
 **Status:** Evaluated
-**Verification:** confirmed
+**Verification:** {confirmed | unconfirmed (reason)}
 
 ## 價格分析
 

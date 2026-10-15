@@ -40,11 +40,11 @@ flowchart TD
 
 ## 第一次使用：初始設定
 
-不管哪種類型，**第一次開啟 Claude Code 時**，系統會自動偵測缺少設定檔，啟動初始設定流程。
+不管哪種類型，**第一次在 AI Agent 開啟 repo 並要求設定找房條件時**，AI Agent 會依 `AGENTS.md` 載入找房流程，檢查缺少的設定檔並啟動初始設定。既有設定與紀錄會保留；修改程式或文件不需要先完成此流程。
 
 ```mermaid
 flowchart TD
-    Launch([開啟 Claude Code]) --> Check{config/profile.yml\n存在？}
+    Launch([在 AI Agent 要求設定找房條件]) --> Check{config/profile.yml\n存在？}
     Check -->|是| Ready([直接使用])
     Check -->|否| Q1["Q1：租屋 / 買屋 / 兩者都找？\n→ 設定 search.mode + buyer_type"]
     Q1 --> Q2["Q2：目標區域 + 預算\n→ regions + budget"]
@@ -57,7 +57,7 @@ flowchart TD
     CopyPortals --> Ready2([設定完成 ✅])
 ```
 
-Claude 會依序問你問題（約 5 分鐘），完成後生成：
+AI Agent 會依序問你問題（約 5 分鐘），完成後生成：
 - `config/profile.yml` — 個人設定（永遠不會被系統更新覆寫）
 - `data/tracker.md` — 物件追蹤表
 - `data/pipeline.md` — 待評估 URL 收件匣
@@ -71,8 +71,9 @@ Claude 會依序問你問題（約 5 分鐘），完成後生成：
 
 ```mermaid
 flowchart TD
-    Input([URL 輸入 或 pipeline 批次]) --> Live{"Playwright 確認\n物件仍上架？"}
+    Input([URL 輸入 或 pipeline 批次]) --> Live{"互動式瀏覽器確認\n物件仍上架？"}
     Live -->|已下架| Dead(["輸出：此物件已下架，停止評估"])
+    Live -->|無法確認| Retry(["說明存取限制；批次保留待重試\n或改評估使用者提供的文字"])
     Live -->|仍在刊登| P1["第一階段：快篩"]
 
     P1 --> PC{"價格 ≤ 預算上限？"}
@@ -144,7 +145,7 @@ flowchart LR
 你：scan
 ```
 
-Claude 啟動背景 agent，透過 Playwright 瀏覽 591、樂屋等平台，套用區域和預算條件，去除重複物件後輸出：
+AI Agent 在目前工作階段依序使用已連接的互動式瀏覽器或 `agent-browser` 瀏覽 591、樂屋等平台，套用區域和預算條件，去除重複物件後輸出：
 
 ```
 平台掃描結果 — 2026-04-08
@@ -166,7 +167,7 @@ Claude 啟動背景 agent，透過 Playwright 瀏覽 591、樂屋等平台，套
 你：pipeline
 ```
 
-Claude 逐一評估 `data/pipeline.md` 裡的物件。**或貼單一 URL 直接評估：**
+AI Agent 逐一評估 `data/pipeline.md` 裡的物件。**或貼單一 URL 直接評估：**
 
 ```
 你：https://rent.591.com.tw/rent-detail-12345678.html
@@ -197,7 +198,7 @@ Claude 逐一評估 `data/pipeline.md` 裡的物件。**或貼單一 URL 直接�
 你：prepare visit for 003
 ```
 
-Claude 生成：通用看屋清單、物件專屬清單（從報告疑點衍生）、出價策略表（掛牌價 vs 實登行情 vs 建議出價 vs 底線）。
+AI Agent 生成：通用看屋清單、物件專屬清單（從報告疑點衍生）、出價策略表（掛牌價 vs 實登行情 vs 建議出價 vs 底線）。
 
 ### 步驟六：記錄看屋結果
 
@@ -205,7 +206,7 @@ Claude 生成：通用看屋清單、物件專屬清單（從報告疑點衍生�
 你：我看完 003 了，想記錄一下
 ```
 
-填完後記錄表格，Claude 自動更新追蹤表狀態 `Visit` → `Visited`。
+填完後記錄表格，AI Agent 自動更新追蹤表狀態 `Visit` → `Visited`。
 
 ---
 
@@ -258,7 +259,7 @@ flowchart LR
 你：affordability
 ```
 
-Claude 計算各方案的可負擔房價：
+AI Agent 計算各方案的可負擔房價：
 
 | 方案 | 利率 | 最高房價 | 頭期款 | 月付 | 30年總利息 |
 |------|------|----------|--------|------|------------|
@@ -413,11 +414,13 @@ stateDiagram-v2
     Negotiating --> Expired : 物件下架
 ```
 
-你可以直接跟 Claude 說「把 003 改成 Visit 狀態」或「003 我決定不追了」，它會更新 `data/tracker.md` 對應欄位。
+你可以直接跟 AI Agent 說「把 003 改成 Visit 狀態」或「003 我決定不追了」，它會更新 `data/tracker.md` 對應欄位。
 
 ---
 
 ## 常用指令速查
+
+以下文字輸入於 AI Agent 對話，不是終端機或 slash command。掃描與 URL 評估的瀏覽器需求見 [瀏覽器設定](docs/browser.md)；掃描與批次評估預設循序執行，進度會存回檔案。
 
 | 指令 | 說明 |
 |------|------|
@@ -435,6 +438,6 @@ stateDiagram-v2
 
 ## 重要原則
 
-- **Claude 永遠不會代你送出 offer、簽約或送出任何申請**。填表、起草文件、準備 offer 摘要都可以，但最後一步由你決定。
-- 評分低於 **3.5/5** 的物件，Claude 會明確建議不要追蹤。
+- **送出 offer、簽約或送出申請前，AI Agent 必須先讓你審閱並取得明確核准**。可以先填表、起草文件與準備 offer 摘要。
+- 評分低於 **3.5/5** 的物件，AI Agent 會明確建議不要追蹤。
 - 所有個人設定（`config/profile.yml`、`modes/_profile.md`）**系統更新永遠不會覆寫**。

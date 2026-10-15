@@ -132,7 +132,7 @@ User has completed the viewing and wants to record findings.
 
 ### After user fills record:
 
-1. **Update tracker.md directly** (status + notes column, direct edit allowed per CLAUDE.md):
+1. **Update tracker.md directly** (status + notes column, direct edit allowed per AGENTS.md):
    - Find the row with matching report number
    - Status: `Visit` → `Visited`
    - Append visit summary to notes column (e.g., "看屋2026-04-10，整體印象4/5，無漏水")

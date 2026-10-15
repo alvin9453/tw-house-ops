@@ -1,6 +1,6 @@
 # tw-house-ops Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Archived implementation history (2026-04-08).** This document describes the original Claude Code implementation. Its file paths, tool names, checkboxes, and commands are historical references, not current execution instructions. Use the root `AGENTS.md` and `docs/house-hunting.md` for the current agent workflow. No Superpowers plugin or sub-skill is required.
 
 **Goal:** Build a Claude Code-powered house hunting pipeline for Taiwan covering rental and purchase listings across 591, 樂屋, 信義, 永慶, 東森, 住商, and 實價登錄.
 
