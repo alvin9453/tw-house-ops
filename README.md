@@ -84,6 +84,8 @@ Agent 依序處理待辦物件，保存報告與追蹤紀錄後，輸出摘要�
 
 通過快篩的物件會產出完整報告：價格分析、通勤試算、五維度評分、疑點清單與看屋問題清單；購屋報告另含貸款試算。行情或物件資料不足時，報告會註明缺口。
 
+購屋報告也可匯出成「每個物件一份 HTML ＋互動總覽」：物件與各主題預設收合，點擊即可展開，並支援搜尋、評分篩選、排序與列印。使用方式與檔案保留規則見 [HTML 報告說明](docs/html-reports.md)。
+
 ![報告詳細內容 1](demo-images/report-details-1.png)
 
 ![報告詳細內容 2](demo-images/report-details-2.png)
@@ -129,6 +131,7 @@ tw-house-ops/
 ├── merge-tracker.mjs            # 合併 TSV 至 tracker.md
 ├── verify-pipeline.mjs          # 驗證 pipeline 完整性
 ├── dedup-tracker.mjs            # 移除重複的追蹤條目
+├── render-pipeline-html.mjs     # 購屋報告轉 HTML 與互動總覽
 └── package.json                 # 腳本與測試入口
 ```
 
@@ -174,6 +177,7 @@ tw-house-ops/
 node merge-tracker.mjs           # 合併待新增 TSV 至 tracker.md
 node verify-pipeline.mjs         # 檢查 pipeline 完整性
 node dedup-tracker.mjs           # 移除重複追蹤條目
+node render-pipeline-html.mjs YYYY-MM-DD  # 匯出該日購屋評估的 HTML
 npm test                        # 執行所有測試
 ```
 

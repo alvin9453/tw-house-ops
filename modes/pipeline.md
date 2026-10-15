@@ -110,6 +110,8 @@ Pipeline 處理完成 — YYYY-MM-DD
 ```
 
 **IMPORTANT — Human Review Output:**
+First read the user's presentation preferences in `modes/_profile.md`. If HTML reports are requested, follow `docs/html-reports.md`: generate one HTML file per evaluated purchase listing and a collapsible overview, then provide a brief summary and HTML links instead of the full inline reports below. Preserve the Markdown reports, TSV workflow, and integrity checks. If HTML generation fails, report the failure and preserve completed evaluations; do not claim the HTML delivery is complete.
+
 After the summary table, always output a dedicated review section. For each qualified listing (score ≥ 3.5), output the full report content inline — do NOT use file links. The user reads everything in the conversation, not in files.
 
 Format:
